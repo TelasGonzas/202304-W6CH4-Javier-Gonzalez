@@ -1,47 +1,54 @@
 import http from 'http';
 import url from 'url';
-import { program } from 'commander';
 import * as dotenv from 'dotenv';
 
 dotenv.config();
 
-const PORT = process.env.PORT || 4444;
-const version = '1.0.0';
+const PORT = process.env.PORT || '42069';
 
-program.option('-v, --version');
-program.parse();
-const options = program.opts();
+const server: any = http.createServer((req, res) => {
+  const parseUrl = url.parse(req.url!);
 
-if (options.version) {
-  console.log('Version ' + version);
-  process.exit(0);
-}
-
-const server = http.createServer((req, res) => {
-  if (!req.url) {
+  if (!parseUrl) {
     server.emit('error', new Error('No url in the request'));
     return;
   }
 
-  const { pathname } = url.parse(req.url);
-
-  if (req.method !== 'GET') {
-    server.emit('error', new Error('Invalid method'));
+  // eslint-disable-next-line no-unused-vars
+  const { pathname } = parseUrl;
+  if (!parseUrl.query) {
+    server.emit('error', new Error('404'));
     return;
   }
 
-  res.write(`<h1>Hola ${pathname!.toUpperCase()}</h1>`);
-  res.write(req.method);
-  res.write(req.url);
+  const { query } = parseUrl;
+  const parseQuery = query.split('&');
+  const num1: string = parseQuery[0];
+  const num2: string = parseQuery[1];
+
+  const a = Number(num1.substring(2, 10));
+  const b = Number(num2.substring(2, 10));
+
+  const operations = () => {
+    const sum = a + b;
+    const difference = a - b;
+    const multiplication = a * b;
+    const division = a / b;
+    return (
+      ` <p>${a}+${b}=
+      ${sum}</p>` +
+      `<p> ${a}-${b}=
+      ${difference}</p>` +
+      `<p> ${a}*${b}=
+      ${multiplication}</p>` +
+      `<p> ${a}/${b}=
+      ${division}</p> `
+    );
+  };
+
+  operations();
+  res.write(`<h1>Operaciones:${operations()}</h1>`);
   res.end();
 });
 
 server.listen(PORT);
-
-server.on('listening', () => {
-  console.log('Listening on port ' + PORT);
-});
-
-server.on('error', (error) => {
-  console.log(error.message);
-});
